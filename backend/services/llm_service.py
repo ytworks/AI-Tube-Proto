@@ -35,6 +35,29 @@ class LLMService:
     ) -> str:
         # APIキーがない場合は定型文を返す
         if not self.api_key_exists:
+            # ローカルTTSのテストメッセージの場合
+            if message == "ローカルTTSのテストメッセージ":
+                from datetime import datetime
+                import pytz
+                
+                # 日本時間を取得
+                japan_tz = pytz.timezone('Asia/Tokyo')
+                now = datetime.now(japan_tz)
+                
+                # 時刻を日本語形式でフォーマット
+                hour = now.hour
+                minute = now.minute
+                
+                # 午前/午後の判定
+                period = "午前" if hour < 12 else "午後"
+                display_hour = hour if hour <= 12 else hour - 12
+                if display_hour == 0:
+                    display_hour = 12
+                
+                time_str = f"{period}{display_hour}時{minute}分"
+                
+                return f"こんにちは、ローカルTTSです。現在の時刻は{time_str}です。"
+            
             provider_name = "OpenAI" if self.provider == "openai" else "Anthropic"
             return f"APIキーがセットされていません。環境変数に{provider_name} APIキーを設定してください。"
         

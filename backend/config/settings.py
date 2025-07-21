@@ -6,6 +6,9 @@ class Settings(BaseSettings):
     # LLM Provider Selection
     llm_provider: Literal["openai", "claude"] = "openai"
     
+    # TTS Provider Selection
+    tts_provider: Literal["openai", "local"] = "openai"
+    
     # API Keys
     openai_api_key: Optional[str] = None
     anthropic_api_key: Optional[str] = None
@@ -23,6 +26,10 @@ class Settings(BaseSettings):
     
     # Claude Model Settings
     claude_model: str = "claude-3-opus-20240229"
+    
+    # MeloTTS Settings
+    melotts_language: Literal["EN", "JP", "ZH"] = "JP"
+    melotts_device: str = "auto"  # "cpu", "cuda", or "auto"
     
     class Config:
         env_file = ".env"

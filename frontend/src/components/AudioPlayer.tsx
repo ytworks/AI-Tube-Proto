@@ -22,13 +22,23 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioBase64, format, a
 
     try {
       setError(null);
-      const audioBlob = base64ToBlob(audioBase64, `audio/${format}`);
+      
+      // MIMEタイプを適切に設定（wavの場合はaudio/wavを使用）
+      const mimeType = format === 'wav' ? 'audio/wav' : `audio/${format}`;
+      const audioBlob = base64ToBlob(audioBase64, mimeType);
       const audioUrl = URL.createObjectURL(audioBlob);
       
       if (audioRef.current) {
+        // 前のURLをクリーンアップ
+        if (audioRef.current.src) {
+          URL.revokeObjectURL(audioRef.current.src);
+        }
+        
         audioRef.current.src = audioUrl;
         audioRef.current.play()
-          .then(() => setIsPlaying(true))
+          .then(() => {
+            setIsPlaying(true);
+          })
           .catch(err => {
             setError('音声の再生に失敗しました');
             console.error('Audio playback error:', err);
