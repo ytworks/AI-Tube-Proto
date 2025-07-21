@@ -13,10 +13,17 @@ logger = logging.getLogger(__name__)
 class SpeechService:
     def __init__(self):
         self.api_key_exists = bool(settings.openai_api_key)
+        self.tts_provider = settings.tts_provider
+        
         if self.api_key_exists:
             self.client = AsyncOpenAI(api_key=settings.openai_api_key)
         else:
             self.client = None
+            
+        # ローカルTTSを使用する場合
+        if self.tts_provider == "local":
+            from services.melotts_service import melotts_service
+            self.melotts = melotts_service
     
     def _generate_mock_audio(self, text: str) -> Tuple[str, str]:
         """APIキーがない場合のモック音声データを生成"""
@@ -26,9 +33,13 @@ class SpeechService:
         return base64.b64encode(wav_header).decode('utf-8'), "wav"
     
     async def speech_to_text(self, audio_base64: str, audio_format: str = "webm") -> str:
-        # APIキーがない場合は定型文を返す
+        # APIキーがない場合の処理
         if not self.api_key_exists:
-            return "（音声認識機能を使用するにはAPIキーが必要です）"
+            # ローカルTTSを使用している場合は、テストメッセージを返す
+            if self.tts_provider == "local":
+                return "ローカルTTSのテストメッセージ"
+            else:
+                return "（音声認識機能を使用するにはOpenAI APIキーが必要です）"
         
         try:
             audio_data = base64.b64decode(audio_base64)
@@ -59,6 +70,15 @@ class SpeechService:
         voice: Optional[str] = None,
         speed: float = 1.0
     ) -> Tuple[str, str]:
+        # ローカルTTSを使用する場合
+        if self.tts_provider == "local":
+            try:
+                return await self.melotts.text_to_speech(text, speed)
+            except Exception as e:
+                logger.error(f"MeloTTS error, falling back to mock audio: {str(e)}")
+                return self._generate_mock_audio(text)
+        
+        # OpenAI TTSを使用する場合
         # APIキーがない場合はモック音声を返す
         if not self.api_key_exists:
             return self._generate_mock_audio(text)

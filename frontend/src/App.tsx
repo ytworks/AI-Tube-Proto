@@ -58,10 +58,28 @@ function App() {
       setMessages(prev => [...prev, userMessage, assistantMessage]);
       setStatus('speaking');
       
+      // ローカルTTSテストメッセージの場合は、ビープ音を再生してからWeb Speech APIで読み上げる
+      if (response.inputText === 'ローカルTTSのテストメッセージ' && 
+          response.responseText.startsWith('こんにちは、ローカルTTSです。')) {
+        // まずビープ音を再生
+        setResponseAudio(response.responseAudio);
+        
+        // ビープ音の後にWeb Speech APIでテキストを読み上げる
+        setTimeout(() => {
+          speakText(response.responseText);
+        }, 600); // ビープ音が0.5秒なので少し待つ
+      }
       // APIキーエラーメッセージの場合は、Web Speech APIで読み上げる
-      if (response.responseText.includes('APIキーがセットされていません') || 
-          response.responseText.includes('音声認識機能を使用するにはAPIキーが必要です')) {
-        speakText(response.responseText);
+      else if (response.responseText.includes('APIキーがセットされていません') || 
+          response.responseText.includes('APIキーが必要です') ||
+          response.inputText.includes('音声認識機能を使用するには')) {
+        // 音声認識エラーと応答生成エラーを組み合わせたメッセージを作成
+        let messageToSpeak = response.responseText;
+        if (response.inputText.includes('音声認識機能を使用するには') && 
+            response.responseText.includes('APIキーがセットされていません')) {
+          messageToSpeak = "音声認識と応答生成の両方にAPIキーが必要です。OpenAI APIキーとClaude APIキーを設定してください。";
+        }
+        speakText(messageToSpeak);
       } else {
         // 通常の音声再生
         setResponseAudio(response.responseAudio);
@@ -110,7 +128,7 @@ function App() {
       
       <AudioPlayer 
         audioBase64={responseAudio} 
-        format="mp3"
+        format="wav"  // MeloTTSはwav形式を返す
         autoPlay={true}
       />
       

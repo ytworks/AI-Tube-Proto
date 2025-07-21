@@ -55,3 +55,11 @@ tmp/
 # Production
 build/
 dist/
+
+# Audio files
+*.wav
+*.mp3
+*.mp4
+*.m4a
+*.ogg
+*.webm
