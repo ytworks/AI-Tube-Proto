@@ -5,12 +5,13 @@
 ## 機能
 
 - 🎤 音声入力（Speech-to-Text）
-- 🤖 ChatGPT APIによる応答生成
+- 🤖 ChatGPT/Claude APIによる応答生成
 - 🔊 音声出力（Text-to-Speech）
 - 🌐 ブラウザベースのインターフェース
 - 🔒 セキュアなAPIキー管理
 - 🔧 APIキーなしでも動作（制限付き）
 - ⚙️ 環境変数によるモデル選択
+- 🔄 LLMプロバイダー切り替え（OpenAI/Claude）
 
 ## 技術スタック
 
@@ -31,7 +32,7 @@
 ### 前提条件
 - Python 3.8以上
 - Node.js 16以上
-- OpenAI APIキー
+- OpenAI APIキー または Anthropic APIキー
 
 ### バックエンドのセットアップ
 
@@ -122,6 +123,18 @@ npm run dev
 
 ## カスタマイズ
 
+### LLMプロバイダーの選択
+
+`.env`ファイルで以下を設定：
+
+```env
+# LLMプロバイダー選択 (openai または claude)
+LLM_PROVIDER=claude
+
+# Claude使用時はAnthropicのAPIキーが必要
+ANTHROPIC_API_KEY=your-anthropic-api-key
+```
+
 ### OpenAIモデルの変更
 
 `.env`ファイルで以下の環境変数を設定できます：
@@ -141,10 +154,25 @@ OPENAI_TTS_MODEL=tts-1-hd
 OPENAI_TTS_VOICE=nova
 ```
 
+### Claudeモデルの変更
+
+```env
+# Claudeモデル (デフォルト: claude-3-opus-20240229)
+# 選択肢: claude-3-opus-20240229, claude-3-sonnet-20240229, claude-3-haiku-20240307
+CLAUDE_MODEL=claude-3-sonnet-20240229
+```
+
 利用可能なモデル：
-- **チャット**: gpt-3.5-turbo, gpt-4, gpt-4-turbo-preview
+- **OpenAI チャット**: gpt-3.5-turbo, gpt-4, gpt-4-turbo-preview
+- **Claude**: claude-3-opus (最高性能), claude-3-sonnet (バランス), claude-3-haiku (高速)
 - **音声合成**: tts-1 (標準品質), tts-1-hd (高品質)
 - **音声**: alloy, echo, fable, onyx, nova, shimmer
+
+**重要な注意事項**: 
+- Claudeを使用する場合でも、音声認識と音声合成にはOpenAI APIが必要です
+- Claudeのみを使用したい場合は、両方のAPIキーを設定してください：
+  - `OPENAI_API_KEY`: 音声認識・音声合成用
+  - `ANTHROPIC_API_KEY`: テキスト応答生成用
 
 ## ライセンス
 

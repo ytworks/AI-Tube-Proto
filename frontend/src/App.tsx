@@ -60,8 +60,15 @@ function App() {
       
       // APIキーエラーメッセージの場合は、Web Speech APIで読み上げる
       if (response.responseText.includes('APIキーがセットされていません') || 
-          response.responseText.includes('音声認識機能を使用するにはAPIキーが必要です')) {
-        speakText(response.responseText);
+          response.responseText.includes('APIキーが必要です') ||
+          response.inputText.includes('音声認識機能を使用するには')) {
+        // 音声認識エラーと応答生成エラーを組み合わせたメッセージを作成
+        let messageToSpeak = response.responseText;
+        if (response.inputText.includes('音声認識機能を使用するには') && 
+            response.responseText.includes('APIキーがセットされていません')) {
+          messageToSpeak = "音声認識と応答生成の両方にAPIキーが必要です。OpenAI APIキーとClaude APIキーを設定してください。";
+        }
+        speakText(messageToSpeak);
       } else {
         // 通常の音声再生
         setResponseAudio(response.responseAudio);

@@ -28,7 +28,7 @@ class SpeechService:
     async def speech_to_text(self, audio_base64: str, audio_format: str = "webm") -> str:
         # APIキーがない場合は定型文を返す
         if not self.api_key_exists:
-            return "（音声認識機能を使用するにはAPIキーが必要です）"
+            return "（音声認識機能を使用するにはOpenAI APIキーが必要です）"
         
         try:
             audio_data = base64.b64decode(audio_base64)
