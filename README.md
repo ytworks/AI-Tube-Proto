@@ -10,6 +10,7 @@
 - 🌐 ブラウザベースのインターフェース
 - 🔒 セキュアなAPIキー管理
 - 🔧 APIキーなしでも動作（制限付き）
+- ⚙️ 環境変数によるモデル選択
 
 ## 技術スタック
 
@@ -118,6 +119,32 @@ npm run dev
 ### APIキーがない場合
 - システムは正常に動作しますが、音声認識と応答生成の代わりに「APIキーがセットされていません」というメッセージが返されます
 - このメッセージはWeb Speech APIを使用してブラウザ側で音声合成されます
+
+## カスタマイズ
+
+### OpenAIモデルの変更
+
+`.env`ファイルで以下の環境変数を設定できます：
+
+```env
+# チャットモデル (デフォルト: gpt-3.5-turbo)
+OPENAI_CHAT_MODEL=gpt-4
+
+# 音声認識モデル (デフォルト: whisper-1)
+OPENAI_WHISPER_MODEL=whisper-1
+
+# 音声合成モデル (デフォルト: tts-1)
+OPENAI_TTS_MODEL=tts-1-hd
+
+# 音声の種類 (デフォルト: alloy)
+# 選択肢: alloy, echo, fable, onyx, nova, shimmer
+OPENAI_TTS_VOICE=nova
+```
+
+利用可能なモデル：
+- **チャット**: gpt-3.5-turbo, gpt-4, gpt-4-turbo-preview
+- **音声合成**: tts-1 (標準品質), tts-1-hd (高品質)
+- **音声**: alloy, echo, fable, onyx, nova, shimmer
 
 ## ライセンス
 

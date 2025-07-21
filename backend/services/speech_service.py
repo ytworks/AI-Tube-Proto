@@ -1,7 +1,7 @@
 from openai import AsyncOpenAI
 import base64
 import io
-from typing import Tuple
+from typing import Tuple, Optional
 import logging
 import tempfile
 import os
@@ -40,7 +40,7 @@ class SpeechService:
             try:
                 with open(tmp_file_path, "rb") as audio_file:
                     transcript = await self.client.audio.transcriptions.create(
-                        model="whisper-1",
+                        model=settings.openai_whisper_model,
                         file=audio_file,
                         language="ja"
                     )
@@ -56,16 +56,19 @@ class SpeechService:
     async def text_to_speech(
         self, 
         text: str, 
-        voice: str = "alloy",
+        voice: Optional[str] = None,
         speed: float = 1.0
     ) -> Tuple[str, str]:
         # APIキーがない場合はモック音声を返す
         if not self.api_key_exists:
             return self._generate_mock_audio(text)
         
+        # 環境変数から音声を取得、指定がなければデフォルト
+        voice = voice or settings.openai_tts_voice
+        
         try:
             response = await self.client.audio.speech.create(
-                model="tts-1",
+                model=settings.openai_tts_model,
                 voice=voice,
                 input=text,
                 speed=speed

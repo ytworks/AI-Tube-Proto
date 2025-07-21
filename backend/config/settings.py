@@ -8,6 +8,12 @@ class Settings(BaseSettings):
     host: str = "0.0.0.0"
     port: int = 8000
     
+    # OpenAI Model Settings
+    openai_chat_model: str = "gpt-3.5-turbo"
+    openai_whisper_model: str = "whisper-1"
+    openai_tts_model: str = "tts-1"
+    openai_tts_voice: str = "alloy"
+    
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"
