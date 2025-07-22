@@ -24,3 +24,6 @@ unidecode
 numba
 librosa
 pydub
+
+# Whisper dependencies
+openai-whisper==20231117

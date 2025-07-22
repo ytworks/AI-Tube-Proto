@@ -14,6 +14,7 @@ class SpeechService:
     def __init__(self):
         self.api_key_exists = bool(settings.openai_api_key)
         self.tts_provider = settings.tts_provider
+        self.stt_provider = settings.stt_provider
         
         if self.api_key_exists:
             self.client = AsyncOpenAI(api_key=settings.openai_api_key)
@@ -24,6 +25,15 @@ class SpeechService:
         if self.tts_provider == "local":
             from services.melotts_service import melotts_service
             self.melotts = melotts_service
+            
+        # ローカルSTTを使用する場合
+        if self.stt_provider == "local":
+            try:
+                from services.whisper_service import whisper_service
+                self.whisper = whisper_service
+            except ImportError as e:
+                logger.warning(f"Failed to import Whisper service: {str(e)}")
+                self.whisper = None
     
     def _generate_mock_audio(self, text: str) -> Tuple[str, str]:
         """APIキーがない場合のモック音声データを生成"""
@@ -33,13 +43,20 @@ class SpeechService:
         return base64.b64encode(wav_header).decode('utf-8'), "wav"
     
     async def speech_to_text(self, audio_base64: str, audio_format: str = "webm") -> str:
+        # ローカルSTTを使用する場合
+        if self.stt_provider == "local":
+            if self.whisper is None:
+                return "（ローカルWhisperが利用できません。必要なパッケージをインストールしてください）"
+            try:
+                return await self.whisper.speech_to_text(audio_base64, audio_format)
+            except Exception as e:
+                logger.error(f"Local Whisper error: {str(e)}")
+                return f"（ローカル音声認識エラー: {str(e)}）"
+        
+        # OpenAI STTを使用する場合
         # APIキーがない場合の処理
         if not self.api_key_exists:
-            # ローカルTTSを使用している場合は、テストメッセージを返す
-            if self.tts_provider == "local":
-                return "ローカルTTSのテストメッセージ"
-            else:
-                return "（音声認識機能を使用するにはOpenAI APIキーが必要です）"
+            return "（音声認識機能を使用するにはOpenAI APIキーが必要です）"
         
         try:
             audio_data = base64.b64decode(audio_base64)
