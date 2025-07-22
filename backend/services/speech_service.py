@@ -45,6 +45,10 @@ class SpeechService:
     async def speech_to_text(self, audio_base64: str, audio_format: str = "webm") -> str:
         # ローカルSTTを使用する場合
         if self.stt_provider == "local":
+            # APIキーがなく、TTSもローカルの場合はテストメッセージを返す
+            if not self.api_key_exists and self.tts_provider == "local":
+                return "ローカルTTSのテストメッセージ"
+            
             if self.whisper is None:
                 return "（ローカルWhisperが利用できません。必要なパッケージをインストールしてください）"
             try:
@@ -56,7 +60,11 @@ class SpeechService:
         # OpenAI STTを使用する場合
         # APIキーがない場合の処理
         if not self.api_key_exists:
-            return "（音声認識機能を使用するにはOpenAI APIキーが必要です）"
+            # ローカルTTSを使用している場合は、テストメッセージを返す
+            if self.tts_provider == "local":
+                return "ローカルTTSのテストメッセージ"
+            else:
+                return "（音声認識機能を使用するにはOpenAI APIキーが必要です）"
         
         try:
             audio_data = base64.b64decode(audio_base64)
