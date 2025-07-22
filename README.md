@@ -1,18 +1,23 @@
 # 音声対話型AIアシスタント
 
-ブラウザベースの音声対話型AIアシスタントシステムです。音声入力を受け取り、ChatGPT APIを使用して応答を生成し、音声で返答します。
+ブラウザベースの音声対話型AIアシスタントシステムです。音声入力を受け取り、ChatGPT/Claude APIを使用して応答を生成し、音声で返答します。
 
 ## 機能
 
 - 🎤 音声入力（Speech-to-Text）
-- 🤖 ChatGPT/Claude APIによる応答生成
+  - OpenAI Whisper API
+  - ローカルWhisper（APIキー不要）
+- 🤖 LLMによる応答生成
+  - OpenAI ChatGPT
+  - Anthropic Claude
 - 🔊 音声出力（Text-to-Speech）
+  - OpenAI TTS API
+  - ローカルTTS（簡易実装）
 - 🌐 ブラウザベースのインターフェース
 - 🔒 セキュアなAPIキー管理
-- 🔧 APIキーなしでも動作（制限付き）
-- ⚙️ 環境変数によるモデル選択
-- 🔄 LLMプロバイダー切り替え（OpenAI/Claude）
-- 🏠 ローカルTTSサポート（MeloTTS）
+- 🔧 APIキーなしでも動作（テストモード）
+- ⚙️ 環境変数による柔軟な設定
+- 🔄 プロバイダー切り替え機能
 
 ## 技術スタック
 
@@ -20,6 +25,8 @@
 - Python 3.8+
 - FastAPI
 - OpenAI API (Whisper, ChatGPT, TTS)
+- Anthropic Claude API
+- OpenAI Whisper（ローカル音声認識）
 - python-dotenv
 
 ### フロントエンド
@@ -33,7 +40,8 @@
 ### 前提条件
 - Python 3.8以上
 - Node.js 16以上
-- OpenAI APIキー または Anthropic APIキー
+- （オプション）OpenAI APIキー
+- （オプション）Anthropic APIキー
 
 ### バックエンドのセットアップ
 
@@ -57,20 +65,20 @@ source venv/bin/activate
 ```bash
 pip install -r requirements.txt
 
-# MeloTTSを使用する場合は追加でインストール（オプション）
-# 方法1: インストールスクリプトを使用
-python install_melotts.py
+# ローカルWhisperを使用する場合（自動的にインストールされます）
+# 初回実行時にモデルが自動ダウンロードされます
 
-# 方法2: 手動インストール
-pip install git+https://github.com/myshell-ai/MeloTTS.git
-python -m unidic download
+# MeloTTSを使用する場合は追加でインストール（オプション、現在は簡易実装のため不要）
+# MeCabが必要: brew install mecab (macOS) または apt-get install mecab (Ubuntu)
+# pip install git+https://github.com/myshell-ai/MeloTTS.git
 ```
 
 4. 環境変数を設定
 ```bash
 cp .env.example .env
 ```
-`.env`ファイルを編集し、OpenAI APIキーを設定してください。
+`.env`ファイルを編集し、必要に応じてAPIキーを設定してください。
+APIキーなしでもローカル機能で動作可能です。
 
 5. サーバーを起動
 ```bash
@@ -107,6 +115,11 @@ npm run dev
 4. 録音停止ボタンをクリック
 5. AIの応答を音声で聞く
 
+### APIキーなしでの動作
+- **STT_PROVIDER=local**: ローカルWhisperで音声認識
+- **TTS_PROVIDER=local**: ビープ音 + Web Speech APIで音声合成
+- **LLMなし**: 「こんにちは、ローカルTTSです。現在の時刻は...」というテストメッセージを返答
+
 ## API仕様
 
 ### エンドポイント
@@ -123,12 +136,14 @@ npm run dev
 - ブラウザの設定でマイクアクセスが許可されているか確認
 
 ### APIエラーが発生する場合
-- OpenAI APIキーが正しく設定されているか確認
+- APIキーが正しく設定されているか確認
 - APIの利用制限に達していないか確認
 
 ### APIキーがない場合
-- システムは正常に動作しますが、音声認識と応答生成の代わりに「APIキーがセットされていません」というメッセージが返されます
-- このメッセージはWeb Speech APIを使用してブラウザ側で音声合成されます
+- ローカル機能を使用して動作します
+- STT: ローカルWhisperで音声認識（初回はモデルダウンロードに時間がかかります）
+- LLM: テストメッセージを返答
+- TTS: ビープ音 + Web Speech APIで音声合成
 
 ## カスタマイズ
 
@@ -177,24 +192,41 @@ CLAUDE_MODEL=claude-3-sonnet-20240229
 - **音声合成**: tts-1 (標準品質), tts-1-hd (高品質)
 - **音声**: alloy, echo, fable, onyx, nova, shimmer
 
-### TTSプロバイダーの選択
+### Speech-to-Textプロバイダーの選択
+
+```env
+# STTプロバイダー選択 (openai または local)
+STT_PROVIDER=local
+
+# ローカルWhisper使用時の設定
+WHISPER_MODEL=base  # tiny, base, small, medium, large から選択
+WHISPER_DEVICE=auto  # cpu, cuda, auto から選択
+```
+
+### Text-to-Speechプロバイダーの選択
 
 ```env
 # TTSプロバイダー選択 (openai または local)
 TTS_PROVIDER=local
 
-# MeloTTS使用時の設定
+# MeloTTS使用時の設定（現在は簡易実装のため未使用）
 MELOTTS_LANGUAGE=JP  # EN, JP, ZH から選択
 MELOTTS_DEVICE=auto  # cpu, cuda, auto から選択
 ```
 
-**重要な注意事項**: 
-- Claudeを使用する場合でも、音声認識にはOpenAI APIが必要です
-- ローカルTTS（MeloTTS）を使用する場合：
-  - 音声合成はAPIキーなしで動作します
-  - 初回実行時にモデルのダウンロードが必要です（自動）
-  - GPUがある場合は自動的にCUDAを使用します
-  - OpenAI APIキーがない場合、「ローカルTTSで話しています」というテストメッセージを音声で返します
+## 動作モードの組み合わせ
+
+| STT | LLM | TTS | 説明 |
+|-----|-----|-----|------|
+| local | なし | local | 完全ローカル動作（テストモード） |
+| openai | openai | openai | フルAPI利用（最高品質） |
+| local | openai | openai | 音声認識のみローカル |
+| openai | claude | local | ClaudeとローカルTTS |
+
+**注意事項**: 
+- ローカルWhisperは初回実行時にモデルをダウンロードします（約140MB〜1.5GB）
+- GPUがある場合は自動的にCUDAアクセラレーションを使用します
+- ローカルTTSは現在簡易実装（ビープ音 + Web Speech API）です
 
 ## ライセンス
 
