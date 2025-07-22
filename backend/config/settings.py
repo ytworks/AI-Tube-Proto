@@ -9,6 +9,9 @@ class Settings(BaseSettings):
     # TTS Provider Selection
     tts_provider: Literal["openai", "local"] = "openai"
     
+    # STT Provider Selection
+    stt_provider: Literal["openai", "local"] = "openai"
+    
     # API Keys
     openai_api_key: Optional[str] = None
     anthropic_api_key: Optional[str] = None
