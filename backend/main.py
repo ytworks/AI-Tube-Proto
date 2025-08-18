@@ -80,6 +80,7 @@ class ProcessVoiceResponse(BaseModel):
     responseText: str
     inputText: str
     sessionId: str
+    isLocalTts: bool
 
 @app.post("/api/speech-to-text", response_model=SpeechToTextResponse)
 async def speech_to_text(request: SpeechToTextRequest):
@@ -120,18 +121,19 @@ async def text_to_speech(request: TextToSpeechRequest):
 async def process_voice(request: ProcessVoiceRequest):
     try:
         session_id = request.sessionId or str(uuid.uuid4())
-        
+
         input_text = await speech_service.speech_to_text(request.audio, request.format)
-        
+
         response_text = await llm_service.get_chat_response(input_text, session_id)
-        
+
         response_audio, _ = await speech_service.text_to_speech(response_text)
-        
+
         return ProcessVoiceResponse(
             responseAudio=response_audio,
             responseText=response_text,
             inputText=input_text,
-            sessionId=session_id
+            sessionId=session_id,
+            isLocalTts=settings.tts_provider == "local",
         )
     except Exception as e:
         logger.error(f"Process voice error: {str(e)}")
